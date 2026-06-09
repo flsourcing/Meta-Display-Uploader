@@ -15,7 +15,7 @@ import {
   ensureDisplaySession,
   refreshDisplaySession,
 } from "@/lib/room-service";
-import { isSupabaseConfigured } from "@/lib/supabase";
+import { isApiConfigured } from "@/lib/api";
 import type { SessionState } from "@/lib/types";
 
 function getCodeClassName(phase: CodePhase): string {
@@ -50,7 +50,7 @@ export default function DisplayPage() {
   }, []);
 
   useEffect(() => {
-    if (!isSupabaseConfigured()) return;
+    if (!isApiConfigured()) return;
 
     let active = true;
     let sessionId = "";
@@ -130,7 +130,7 @@ export default function DisplayPage() {
     return () => window.clearTimeout(timeout);
   }, [flashClass]);
 
-  if (!isSupabaseConfigured()) {
+  if (!isApiConfigured()) {
     return <SetupNotice />;
   }
 

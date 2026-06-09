@@ -6,7 +6,7 @@ import { Suspense, useMemo, useState } from "react";
 import { SetupNotice } from "@/components/SetupNotice";
 import { withBasePath } from "@/lib/paths";
 import { sendMediaToCode } from "@/lib/room-service";
-import { isSupabaseConfigured } from "@/lib/supabase";
+import { isApiConfigured } from "@/lib/api";
 
 type UploadMode = "file" | "video-url" | "youtube";
 
@@ -228,7 +228,7 @@ function UploadForm() {
 }
 
 export default function UploadPage() {
-  if (!isSupabaseConfigured()) {
+  if (!isApiConfigured()) {
     return <SetupNotice />;
   }
 

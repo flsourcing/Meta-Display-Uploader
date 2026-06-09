@@ -2,7 +2,8 @@
 
 Pair Meta glasses to a rotating 6-digit code and push photos, videos, direct video URLs, or YouTube links to the live display.
 
-Deployed as a **static site on GitHub Pages**: [https://flsourcing.github.io/Meta-Display-Uploader/](https://flsourcing.github.io/Meta-Display-Uploader/)
+- **Frontend (GitHub Pages):** [https://flsourcing.github.io/Meta-Display-Uploader/](https://flsourcing.github.io/Meta-Display-Uploader/)
+- **Backend (Railway):** Express API + PostgreSQL
 
 ## How it works
 
@@ -18,41 +19,49 @@ Deployed as a **static site on GitHub Pages**: [https://flsourcing.github.io/Met
 - **Red + 3 quick flashes** — critical at 10 seconds
 - **Green reset** — new code every 30 seconds
 
-## GitHub Pages setup
+## Railway setup (API + database)
 
-GitHub Pages only serves static files, so pairing and uploads run in the browser through **Supabase** (free tier).
+You already have **Uploader Database** on Railway. Deploy the API service next.
 
-### 1. Enable GitHub Pages
+### 1. Deploy the API service
 
-In the repo on GitHub:
+1. In Railway, open your project (**Uploader Cloud**).
+2. **New → GitHub Repo** → select this repository.
+3. Set **Root Directory** to `server`.
+4. **Variables → Add Reference** and link `DATABASE_URL` from **Uploader Database**.
+5. Add variable: `CORS_ORIGIN=https://flsourcing.github.io`
+6. Generate a **public domain** for the API service (e.g. `meta-display-api.up.railway.app`).
 
-1. **Settings → Pages**
-2. **Build and deployment → Source**: GitHub Actions
+The API runs migrations automatically on startup using `server/schema.sql`.
 
-### 2. Create Supabase project
+### 2. Connect GitHub Pages to the API
 
-1. Create a project at [supabase.com](https://supabase.com)
-2. Open **SQL Editor** and run the script in [`supabase/schema.sql`](supabase/schema.sql)
-3. Copy your project URL and anon public key from **Project Settings → API**
-
-### 3. Add GitHub secrets
-
-In the repo: **Settings → Secrets and variables → Actions → New repository secret**
+In your GitHub repo: **Settings → Secrets and variables → Actions**
 
 | Secret | Value |
 |--------|-------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon public key |
+| `NEXT_PUBLIC_API_URL` | Your Railway API URL (e.g. `https://meta-display-api.up.railway.app`) |
 
-Push to `main` (or re-run the **Deploy GitHub Pages** workflow). The live site will be at:
-
-`https://flsourcing.github.io/Meta-Display-Uploader/`
+Push to `main` or re-run **Deploy GitHub Pages** to rebuild the frontend.
 
 ## Run locally
 
+**Terminal 1 — API**
+
+```bash
+cd server
+cp ../.env.example .env
+# Add DATABASE_URL from Railway (use DATABASE_PUBLIC_URL for local access)
+npm install
+npm run dev
+```
+
+**Terminal 2 — frontend**
+
 ```bash
 cp .env.example .env.local
-# Fill in Supabase values. Leave NEXT_PUBLIC_BASE_PATH empty for localhost.
+# NEXT_PUBLIC_API_URL=http://localhost:8080
+# Leave NEXT_PUBLIC_BASE_PATH empty for localhost
 
 npm install
 npm run dev
@@ -60,12 +69,7 @@ npm run dev
 
 - Display: [http://localhost:3000](http://localhost:3000)
 - Upload: [http://localhost:3000/upload](http://localhost:3000/upload)
-
-To test the GitHub Pages base path locally:
-
-```bash
-NEXT_PUBLIC_BASE_PATH=/Meta-Display-Uploader npm run dev
-```
+- API health: [http://localhost:8080/health](http://localhost:8080/health)
 
 ## Upload options
 
@@ -75,8 +79,9 @@ NEXT_PUBLIC_BASE_PATH=/Meta-Display-Uploader npm run dev
 
 ## Architecture
 
-- **Frontend**: Next.js static export → GitHub Pages
-- **Sync**: Supabase Postgres (`display_sessions` table)
-- **File storage**: Supabase Storage (`media` bucket)
-
-The old server API routes were removed because GitHub Pages cannot run Node.js backends.
+| Layer | Host | Role |
+|-------|------|------|
+| Frontend | GitHub Pages | Display + upload UI (static) |
+| API | Railway | Sessions, codes, file uploads |
+| Database | Railway Postgres | Session and media metadata |
+| File storage | Railway API disk | Uploaded photos/videos served at `/uploads` |

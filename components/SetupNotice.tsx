@@ -2,23 +2,32 @@ export function SetupNotice() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-4 px-6 py-10 text-white">
       <p className="text-xs uppercase tracking-[0.35em] text-white/45">Meta Display</p>
-      <h1 className="text-3xl font-semibold">GitHub Pages setup required</h1>
+      <h1 className="text-3xl font-semibold">Railway API setup required</h1>
       <p className="text-white/70">
-        This app runs as a static site on GitHub Pages. Pairing and uploads use Supabase
-        from the browser, so you need a free Supabase project and two GitHub repository
-        secrets before the live site can sync media between devices.
+        The frontend runs on GitHub Pages, but pairing and uploads go through a Railway
+        API connected to your Postgres database. Deploy the API and point the site at it.
       </p>
       <ol className="list-decimal space-y-2 pl-5 text-sm text-white/70">
-        <li>Create a Supabase project and run the SQL in <code>supabase/schema.sql</code>.</li>
         <li>
-          Add GitHub secrets: <code>NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
-          <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>.
+          In Railway, create a service from this repo with root directory set to{" "}
+          <code>server</code>.
         </li>
-        <li>Push to <code>main</code> to redeploy GitHub Pages.</li>
+        <li>
+          Link your <code>Uploader Database</code> Postgres service so{" "}
+          <code>DATABASE_URL</code> is available.
+        </li>
+        <li>
+          Generate a public domain for the API service and set{" "}
+          <code>CORS_ORIGIN=https://flsourcing.github.io</code>.
+        </li>
+        <li>
+          Add GitHub secret <code>NEXT_PUBLIC_API_URL</code> with your Railway API URL,
+          then redeploy GitHub Pages.
+        </li>
       </ol>
       <p className="text-sm text-white/50">
-        For local development, copy <code>.env.example</code> to <code>.env.local</code> and
-        fill in the same values.
+        For local development, copy <code>.env.example</code> to <code>.env.local</code>{" "}
+        and run the API with <code>npm run dev --prefix server</code>.
       </p>
     </main>
   );

@@ -32,9 +32,9 @@ yarn-error.log*
 .env*
 !.env.example
 
-# uploads
-/public/uploads/*
-!/public/uploads/.gitkeep
+# server uploads (Railway local disk)
+/server/uploads/*
+!/server/uploads/.gitkeep
 
 # typescript
 *.tsbuildinfo
