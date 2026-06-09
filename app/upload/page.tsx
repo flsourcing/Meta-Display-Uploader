@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { SetupNotice } from "@/components/SetupNotice";
-import { withBasePath } from "@/lib/paths";
 import { sendMediaToCode } from "@/lib/room-service";
 import { isApiConfigured } from "@/lib/api";
 
@@ -78,7 +77,7 @@ function UploadForm() {
           </p>
         </div>
         <Link
-          href={withBasePath("/")}
+          href="/"
           className="rounded-full border border-white/15 px-4 py-2 text-sm text-white/70 transition hover:border-white/30 hover:text-white"
         >
           Display page
@@ -217,7 +216,7 @@ function UploadForm() {
         </ol>
         <button
           type="button"
-          onClick={() => router.push(withBasePath(`/upload?code=${code}`))}
+          onClick={() => router.push(`/upload?code=${code}`)}
           className="mt-4 text-emerald-300 hover:underline"
         >
           Refresh share link with current code

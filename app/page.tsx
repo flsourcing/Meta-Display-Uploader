@@ -10,7 +10,7 @@ import {
   getCodePhase,
   type CodePhase,
 } from "@/lib/code";
-import { absoluteAppUrl, withBasePath } from "@/lib/paths";
+import { absoluteAppUrl } from "@/lib/paths";
 import {
   ensureDisplaySession,
   refreshDisplaySession,
@@ -149,7 +149,7 @@ export default function DisplayPage() {
           <h1 className="text-2xl font-semibold text-white">Glasses Pairing Code</h1>
         </div>
         <Link
-          href={withBasePath("/upload")}
+          href="/upload"
           className="rounded-full border border-white/15 px-4 py-2 text-sm text-white/70 transition hover:border-white/30 hover:text-white"
         >
           Upload page
