@@ -21,8 +21,9 @@ export function SetupNotice() {
           <code>CORS_ORIGIN=https://flsourcing.github.io</code>.
         </li>
         <li>
-          Add GitHub secret <code>NEXT_PUBLIC_API_URL</code> with your Railway API URL,
-          then redeploy GitHub Pages.
+          Add GitHub secret <code>NEXT_PUBLIC_API_URL</code> with your{" "}
+          <strong>actual</strong> Railway domain (from Settings → Networking — not the
+          README example with <code>xxxx</code>).
         </li>
       </ol>
       <p className="text-sm text-white/50">
