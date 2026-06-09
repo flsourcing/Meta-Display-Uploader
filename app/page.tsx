@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MediaViewer } from "@/components/MediaViewer";
 import { SetupNotice } from "@/components/SetupNotice";
@@ -137,7 +136,7 @@ export default function DisplayPage() {
 
   if (!apiReady) {
     return (
-      <main className="flex min-h-screen items-center justify-center text-white/60">
+      <main className="flex min-h-screen items-center justify-center bg-black text-white/60">
         Loading...
       </main>
     );
@@ -147,72 +146,44 @@ export default function DisplayPage() {
     return <SetupNotice />;
   }
 
+  if (session?.media) {
+    return (
+      <main className="fixed inset-0 bg-black">
+        <MediaViewer media={session.media} />
+      </main>
+    );
+  }
+
   const uploadUrl = absoluteAppUrl("/upload");
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
-      <header className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-white/45">
-            Meta Display
-          </p>
-          <h1 className="text-2xl font-semibold text-white">Glasses Pairing Code</h1>
-        </div>
-        <Link
-          href="/upload"
-          className="rounded-full border border-white/15 px-4 py-2 text-sm text-white/70 transition hover:border-white/30 hover:text-white"
+    <main className="flex min-h-screen items-center justify-center bg-black px-6 py-10">
+      <div className="w-full max-w-xl text-center">
+        <div
+          className={`font-mono text-7xl font-bold tracking-[0.25em] transition-colors duration-300 sm:text-8xl ${getCodeClassName(phase)} ${flashClass}`}
         >
-          Upload page
-        </Link>
-      </header>
+          {session?.code ?? "------"}
+        </div>
 
-      {error && (
-        <p className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-          {error}
+        <p className="mt-8 text-5xl font-semibold tabular-nums text-white sm:text-6xl">
+          {secondsRemaining}s
         </p>
-      )}
 
-      <section className="grid flex-1 gap-6 lg:grid-cols-[320px_1fr]">
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
-          <p className="mb-3 text-sm uppercase tracking-[0.25em] text-white/45">
-            Current code
+        <div className="mt-12">
+          <p className="text-sm uppercase tracking-[0.3em] text-white/40">
+            Upload on phone or desktop
           </p>
-          <div
-            className={`font-mono text-6xl font-bold tracking-[0.2em] transition-colors duration-300 sm:text-7xl ${getCodeClassName(phase)} ${flashClass}`}
-          >
-            {session?.code ?? "------"}
-          </div>
-          <div className="mt-6 flex items-end justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.25em] text-white/45">
-                Expires in
-              </p>
-              <p className="mt-1 text-4xl font-semibold tabular-nums">{secondsRemaining}s</p>
-            </div>
-            <div className="text-right text-xs text-white/45">
-              <p>Green: fresh code</p>
-              <p>Yellow flash at 20s</p>
-              <p>Red flash at 10s</p>
-            </div>
-          </div>
-          <div className="mt-6 rounded-2xl bg-black/30 p-4 text-sm text-white/60">
-            <p className="mb-2 text-white/80">Send media to these glasses:</p>
-            <p className="break-all font-mono text-xs text-emerald-300/90">{uploadUrl}</p>
-            <p className="mt-2 text-xs text-white/45">
-              Enter the code above on that page when uploading.
-            </p>
-          </div>
+          <p className="mt-4 break-all font-mono text-base text-emerald-300 sm:text-lg">
+            {uploadUrl}
+          </p>
         </div>
 
-        <div className="flex min-h-[360px] flex-col rounded-[2rem] border border-white/10 bg-white/[0.03] p-4 sm:p-6">
-          <p className="mb-4 text-sm uppercase tracking-[0.25em] text-white/45">
-            Live display
+        {error && (
+          <p className="mt-8 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {error}
           </p>
-          <div className="flex-1">
-            <MediaViewer media={session?.media ?? null} />
-          </div>
-        </div>
-      </section>
+        )}
+      </div>
     </main>
   );
 }
