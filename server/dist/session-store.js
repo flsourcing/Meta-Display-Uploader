@@ -1,15 +1,30 @@
 import { randomUUID } from "crypto";
-import { CODE_INTERVAL_MS, generateCode, getTimeBucket, } from "./code.js";
+import { CODE_INTERVAL_MS, generateRandomCode, getTimeBucket, } from "./code.js";
 import { getPool } from "./db.js";
 import { rowToSession } from "./types.js";
 function getCodeExpiry(now = Date.now()) {
     const bucket = getTimeBucket(now);
     return new Date((bucket + 1) * CODE_INTERVAL_MS);
 }
+async function generateUniqueCode(bucket, now = Date.now()) {
+    const pool = getPool();
+    for (let attempt = 0; attempt < 30; attempt++) {
+        const code = generateRandomCode();
+        const existing = await pool.query(`select 1 from display_sessions
+       where code = $1
+         and code_bucket = $2
+         and code_expires_at > $3
+       limit 1`, [code, bucket, new Date(now)]);
+        if (existing.rowCount === 0) {
+            return code;
+        }
+    }
+    throw new Error("Could not generate a unique pairing code.");
+}
 async function upsertRoom(sessionId, now = Date.now()) {
     const pool = getPool();
     const bucket = getTimeBucket(now);
-    const code = generateCode(sessionId, bucket);
+    const code = await generateUniqueCode(bucket, now);
     const codeExpiresAt = getCodeExpiry(now);
     const result = await pool.query(`insert into display_sessions (
       session_id, code, code_bucket, code_expires_at, updated_at

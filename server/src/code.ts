@@ -1,3 +1,5 @@
+import { randomInt } from "crypto";
+
 export const CODE_INTERVAL_MS = 30_000;
 
 export function getTimeBucket(now = Date.now()): number {
@@ -9,13 +11,8 @@ export function getSecondsRemaining(now = Date.now()): number {
   return Math.ceil((CODE_INTERVAL_MS - elapsed) / 1000);
 }
 
-export function generateCode(sessionId: string, bucket: number): string {
-  let hash = 0;
-  const input = `${sessionId}:${bucket}`;
-  for (let i = 0; i < input.length; i++) {
-    hash = (hash * 31 + input.charCodeAt(i)) >>> 0;
-  }
-  return String(hash % 1_000_000).padStart(6, "0");
+export function generateRandomCode(): string {
+  return String(randomInt(0, 1_000_000)).padStart(6, "0");
 }
 
 export function parseYouTubeId(url: string): string | null {

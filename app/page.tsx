@@ -93,7 +93,7 @@ export default function DisplayPage() {
       if (sessionIdRef.current) {
         void refreshSession(sessionIdRef.current);
       }
-    }, 1000);
+    }, 500);
 
     return () => {
       active = false;
@@ -155,10 +155,7 @@ export default function DisplayPage() {
     return <SetupNotice />;
   }
 
-  const uploadUrl =
-    session != null
-      ? absoluteAppUrl(`/upload?code=${session.code}`)
-      : absoluteAppUrl("/upload");
+  const uploadUrl = absoluteAppUrl("/upload");
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
@@ -209,6 +206,9 @@ export default function DisplayPage() {
           <div className="mt-6 rounded-2xl bg-black/30 p-4 text-sm text-white/60">
             <p className="mb-2 text-white/80">Send media to these glasses:</p>
             <p className="break-all font-mono text-xs text-emerald-300/90">{uploadUrl}</p>
+            <p className="mt-2 text-xs text-white/45">
+              Enter the code above on that page when uploading.
+            </p>
           </div>
         </div>
 

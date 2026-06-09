@@ -45,7 +45,12 @@ async function start() {
     app.use(cors({
         origin: getAllowedOrigins(),
     }));
-    app.use("/uploads", express.static(uploadDir));
+    app.use("/uploads", express.static(uploadDir, {
+        maxAge: "1d",
+        setHeaders(res) {
+            res.setHeader("Cache-Control", "public, max-age=86400");
+        },
+    }));
     app.get("/health", (_req, res) => {
         res.json({ ok: true });
     });

@@ -1,3 +1,4 @@
+import { compressImageIfNeeded } from "./compress-image";
 import { getYouTubeEmbedUrl } from "./code";
 import { apiFetch } from "./api";
 import type { MediaItem, SessionState } from "./types";
@@ -38,9 +39,14 @@ export async function sendMediaToCode(
     | { kind: "youtube"; url: string }
 ): Promise<SessionState> {
   if (input.kind === "file") {
+    const preparedFile =
+      input.file.type.startsWith("image/")
+        ? await compressImageIfNeeded(input.file)
+        : input.file;
+
     const formData = new FormData();
     formData.append("code", code.trim());
-    formData.append("file", input.file);
+    formData.append("file", preparedFile);
 
     const payload = await apiFetch<{ session: SessionState }>("/api/upload", {
       method: "POST",
