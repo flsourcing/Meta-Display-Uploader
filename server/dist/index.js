@@ -23,10 +23,7 @@ function getAllowedOrigins() {
     const configured = process.env.CORS_ORIGIN?.split(",").map((value) => value.trim());
     if (configured?.length)
         return configured;
-    return [
-        "http://localhost:3000",
-        "https://flsourcing.github.io",
-    ];
+    return true;
 }
 const storage = multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, uploadDir),

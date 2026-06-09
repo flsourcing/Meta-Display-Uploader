@@ -15,7 +15,7 @@ import {
   ensureDisplaySession,
   refreshDisplaySession,
 } from "@/lib/room-service";
-import { isApiConfigured } from "@/lib/api";
+import { getResolvedApiUrl, initApiConfig } from "@/lib/api";
 import type { SessionState } from "@/lib/types";
 
 function getCodeClassName(phase: CodePhase): string {
@@ -25,12 +25,14 @@ function getCodeClassName(phase: CodePhase): string {
 }
 
 export default function DisplayPage() {
+  const [apiReady, setApiReady] = useState(false);
   const [session, setSession] = useState<SessionState | null>(null);
   const [secondsRemaining, setSecondsRemaining] = useState(30);
   const [phase, setPhase] = useState<CodePhase>("fresh");
   const [flashClass, setFlashClass] = useState("");
   const [error, setError] = useState<string | null>(null);
   const previousSeconds = useRef<number | null>(null);
+  const sessionIdRef = useRef("");
 
   const refreshSession = useCallback(async (sessionId: string) => {
     try {
@@ -40,36 +42,47 @@ export default function DisplayPage() {
       setError(null);
       return data;
     } catch (refreshError) {
-      setError(
+      const message =
         refreshError instanceof Error
           ? refreshError.message
-          : "Could not refresh session."
+          : "Could not refresh session.";
+      setError(
+        message === "Failed to fetch"
+          ? `Cannot reach API at ${getResolvedApiUrl() ?? "unknown"}. Check Railway is online and CORS_ORIGIN is set.`
+          : message
       );
       return null;
     }
   }, []);
 
   useEffect(() => {
-    if (!isApiConfigured()) return;
-
     let active = true;
-    let sessionId = "";
 
     async function bootstrap() {
+      const apiUrl = await initApiConfig();
+      if (!active) return;
+
+      setApiReady(true);
+      if (!apiUrl) return;
+
       try {
         const data = await ensureDisplaySession();
         if (!active) return;
 
-        sessionId = data.id;
+        sessionIdRef.current = data.id;
         setSession(data);
         setSecondsRemaining(data.secondsRemaining);
         setError(null);
       } catch (bootstrapError) {
         if (!active) return;
-        setError(
+        const message =
           bootstrapError instanceof Error
             ? bootstrapError.message
-            : "Could not start display session."
+            : "Could not start display session.";
+        setError(
+          message === "Failed to fetch"
+            ? `Cannot reach API at ${apiUrl}. Check Railway is online and CORS_ORIGIN is set.`
+            : message
         );
       }
     }
@@ -77,8 +90,8 @@ export default function DisplayPage() {
     bootstrap();
 
     const poll = window.setInterval(() => {
-      if (sessionId) {
-        void refreshSession(sessionId);
+      if (sessionIdRef.current) {
+        void refreshSession(sessionIdRef.current);
       }
     }, 1000);
 
@@ -127,10 +140,18 @@ export default function DisplayPage() {
   useEffect(() => {
     if (!flashClass) return;
     const timeout = window.setTimeout(() => setFlashClass(""), 1100);
-    return () => window.clearTimeout(timeout);
+    return () => window.clearInterval(timeout);
   }, [flashClass]);
 
-  if (!isApiConfigured()) {
+  if (!apiReady) {
+    return (
+      <main className="flex min-h-screen items-center justify-center text-white/60">
+        Loading...
+      </main>
+    );
+  }
+
+  if (!getResolvedApiUrl()) {
     return <SetupNotice />;
   }
 

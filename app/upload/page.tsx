@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { SetupNotice } from "@/components/SetupNotice";
+import { getResolvedApiUrl, initApiConfig } from "@/lib/api";
 import { sendMediaToCode } from "@/lib/room-service";
-import { isApiConfigured } from "@/lib/api";
 
 type UploadMode = "file" | "video-url" | "youtube";
 
@@ -227,7 +227,21 @@ function UploadForm() {
 }
 
 export default function UploadPage() {
-  if (!isApiConfigured()) {
+  const [apiReady, setApiReady] = useState(false);
+
+  useEffect(() => {
+    initApiConfig().finally(() => setApiReady(true));
+  }, []);
+
+  if (!apiReady) {
+    return (
+      <main className="flex min-h-screen items-center justify-center text-white/60">
+        Loading upload page...
+      </main>
+    );
+  }
+
+  if (!getResolvedApiUrl()) {
     return <SetupNotice />;
   }
 

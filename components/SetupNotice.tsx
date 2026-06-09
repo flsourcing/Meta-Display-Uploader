@@ -2,34 +2,30 @@ export function SetupNotice() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-4 px-6 py-10 text-white">
       <p className="text-xs uppercase tracking-[0.35em] text-white/45">Meta Display</p>
-      <h1 className="text-3xl font-semibold">Railway API setup required</h1>
+      <h1 className="text-3xl font-semibold">Railway API URL required</h1>
       <p className="text-white/70">
-        The frontend runs on GitHub Pages, but pairing and uploads go through a Railway
-        API connected to your Postgres database. Deploy the API and point the site at it.
+        The site needs your Railway API URL to generate pairing codes. The easiest fix is
+        editing one file on GitHub — no rebuild secrets needed.
       </p>
       <ol className="list-decimal space-y-2 pl-5 text-sm text-white/70">
         <li>
-          In Railway, create a service from this repo with root directory set to{" "}
-          <code>server</code>.
+          In Railway, open your <code>server</code> service → <strong>Settings →
+          Networking</strong> and copy your public domain.
         </li>
         <li>
-          Link your <code>Uploader Database</code> Postgres service so{" "}
-          <code>DATABASE_URL</code> is available.
+          Test it: open <code>https://YOUR-DOMAIN/health</code> — you should see{" "}
+          <code>{'{"ok":true}'}</code>.
         </li>
         <li>
-          Generate a public domain for the API service and set{" "}
-          <code>CORS_ORIGIN=https://flsourcing.github.io</code>.
+          On GitHub, edit <code>public/api-config.json</code> in this repo and set:{" "}
+          <code>{'"apiUrl": "https://YOUR-DOMAIN"'}</code>
         </li>
         <li>
-          Add GitHub secret <code>NEXT_PUBLIC_API_URL</code> with your{" "}
-          <strong>actual</strong> Railway domain (from Settings → Networking — not the
-          README example with <code>xxxx</code>).
+          On Railway, set <code>CORS_ORIGIN=https://flsourcing.github.io</code> on the
+          API service.
         </li>
+        <li>Wait ~1 minute for GitHub Pages to update, then hard refresh.</li>
       </ol>
-      <p className="text-sm text-white/50">
-        For local development, copy <code>.env.example</code> to <code>.env.local</code>{" "}
-        and run the API with <code>npm run dev --prefix server</code>.
-      </p>
     </main>
   );
 }
