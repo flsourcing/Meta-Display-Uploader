@@ -114,7 +114,7 @@ async function start(): Promise<void> {
     try {
       const code = String(req.body.code ?? "").trim();
       const videoUrl = String(req.body.videoUrl ?? "").trim();
-      const youtubeUrl = String(req.body.youtubeUrl ?? "").trim();
+      const pageUrl = String(req.body.pageUrl ?? "").trim();
       const file = req.file;
 
       if (!/^\d{6}$/.test(code)) {
@@ -151,35 +151,46 @@ async function start(): Promise<void> {
           originalName: file.originalname,
           uploadedAt: Date.now(),
         };
-      } else if (youtubeUrl) {
-        const embedUrl = getYouTubeEmbedUrl(youtubeUrl);
-        if (!embedUrl) {
-          res.status(400).json({ error: "Could not read that YouTube link." });
+      } else if (pageUrl) {
+        try {
+          new URL(pageUrl);
+        } catch {
+          res.status(400).json({ error: "Enter a valid web page URL." });
           return;
         }
 
         media = {
-          type: "youtube",
-          url: embedUrl,
-          originalName: youtubeUrl,
+          type: "webpage",
+          url: pageUrl,
+          originalName: pageUrl,
           uploadedAt: Date.now(),
         };
       } else if (videoUrl) {
-        try {
-          new URL(videoUrl);
-        } catch {
-          res.status(400).json({ error: "Enter a valid video URL." });
-          return;
-        }
+        const embedUrl = getYouTubeEmbedUrl(videoUrl);
+        if (embedUrl) {
+          media = {
+            type: "youtube",
+            url: embedUrl,
+            originalName: videoUrl,
+            uploadedAt: Date.now(),
+          };
+        } else {
+          try {
+            new URL(videoUrl);
+          } catch {
+            res.status(400).json({ error: "Enter a valid video or YouTube URL." });
+            return;
+          }
 
-        media = {
-          type: "video-url",
-          url: videoUrl,
-          originalName: videoUrl,
-          uploadedAt: Date.now(),
-        };
+          media = {
+            type: "video-url",
+            url: videoUrl,
+            originalName: videoUrl,
+            uploadedAt: Date.now(),
+          };
+        }
       } else {
-        res.status(400).json({ error: "Upload a file or provide a video / YouTube URL." });
+        res.status(400).json({ error: "Upload a file or provide a URL." });
         return;
       }
 

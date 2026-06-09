@@ -1,5 +1,4 @@
 import { compressImageIfNeeded } from "./compress-image";
-import { getYouTubeEmbedUrl } from "./code";
 import { apiFetch } from "./api";
 import type { MediaItem, SessionState } from "./types";
 
@@ -23,8 +22,8 @@ export async function sendMediaToCode(
   code: string,
   input:
     | { kind: "file"; file: File }
-    | { kind: "video-url"; url: string }
-    | { kind: "youtube"; url: string }
+    | { kind: "webpage"; url: string }
+    | { kind: "video-link"; url: string }
 ): Promise<SessionState> {
   if (input.kind === "file") {
     const preparedFile =
@@ -47,14 +46,10 @@ export async function sendMediaToCode(
   const formData = new FormData();
   formData.append("code", code.trim());
 
-  if (input.kind === "video-url") {
-    formData.append("videoUrl", input.url);
+  if (input.kind === "webpage") {
+    formData.append("pageUrl", input.url);
   } else {
-    const embedUrl = getYouTubeEmbedUrl(input.url);
-    if (!embedUrl) {
-      throw new Error("Could not read that YouTube link.");
-    }
-    formData.append("youtubeUrl", input.url);
+    formData.append("videoUrl", input.url);
   }
 
   const payload = await apiFetch<{ session: SessionState }>("/api/upload", {

@@ -280,5 +280,17 @@ export function MediaViewer({ media }: MediaViewerProps) {
     return <HtmlVideoPlayer key={`${media.url}-${media.uploadedAt}`} src={media.url} />;
   }
 
+  if (media.type === "webpage") {
+    return (
+      <iframe
+        key={`${media.url}-${media.uploadedAt}`}
+        src={media.url}
+        title={media.originalName ?? "Web page"}
+        className="h-full w-full border-0 bg-white"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+      />
+    );
+  }
+
   return <YouTubeVideoPlayer key={`${media.url}-${media.uploadedAt}`} url={media.url} />;
 }

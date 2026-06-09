@@ -1,6 +1,6 @@
 import { getSecondsRemainingFromExpiry } from "./code.js";
 
-export type MediaType = "image" | "video" | "video-url" | "youtube";
+export type MediaType = "image" | "video" | "video-url" | "youtube" | "webpage";
 
 export interface MediaItem {
   type: MediaType;
