@@ -32,28 +32,43 @@ export default function DisplayPage() {
   const [flashClass, setFlashClass] = useState("");
   const [error, setError] = useState<string | null>(null);
   const previousSeconds = useRef<number | null>(null);
+  const previousCode = useRef<string | null>(null);
   const sessionIdRef = useRef("");
 
-  const refreshSession = useCallback(async (sessionId: string) => {
-    try {
-      const data = await refreshDisplaySession(sessionId);
-      setSession(data);
-      setSecondsRemaining(data.secondsRemaining);
-      setError(null);
-      return data;
-    } catch (refreshError) {
-      const message =
-        refreshError instanceof Error
-          ? refreshError.message
-          : "Could not refresh session.";
-      setError(
-        message === "Failed to fetch"
-          ? `Cannot reach API at ${getResolvedApiUrl() ?? "unknown"}. Check Railway is online and CORS_ORIGIN is set.`
-          : message
-      );
-      return null;
+  const applySession = useCallback((data: SessionState) => {
+    if (previousCode.current && previousCode.current !== data.code) {
+      setFlashClass("");
+      previousSeconds.current = null;
     }
+
+    previousCode.current = data.code;
+    sessionIdRef.current = data.id;
+    setSession(data);
+    setSecondsRemaining(data.secondsRemaining);
+    setError(null);
   }, []);
+
+  const refreshSession = useCallback(
+    async (sessionId: string) => {
+      try {
+        const data = await refreshDisplaySession(sessionId);
+        applySession(data);
+        return data;
+      } catch (refreshError) {
+        const message =
+          refreshError instanceof Error
+            ? refreshError.message
+            : "Could not refresh session.";
+        setError(
+          message === "Failed to fetch"
+            ? `Cannot reach API at ${getResolvedApiUrl() ?? "unknown"}. Check Railway is online and CORS_ORIGIN is set.`
+            : message
+        );
+        return null;
+      }
+    },
+    [applySession]
+  );
 
   useEffect(() => {
     let active = true;
@@ -68,11 +83,7 @@ export default function DisplayPage() {
       try {
         const data = await ensureDisplaySession();
         if (!active) return;
-
-        sessionIdRef.current = data.id;
-        setSession(data);
-        setSecondsRemaining(data.secondsRemaining);
-        setError(null);
+        applySession(data);
       } catch (bootstrapError) {
         if (!active) return;
         const message =
@@ -99,23 +110,7 @@ export default function DisplayPage() {
       active = false;
       window.clearInterval(poll);
     };
-  }, [refreshSession]);
-
-  useEffect(() => {
-    if (!session) return;
-
-    const timer = window.setInterval(() => {
-      setSecondsRemaining((current) => {
-        if (current <= 1) {
-          void refreshSession(session.id);
-          return 30;
-        }
-        return current - 1;
-      });
-    }, 1000);
-
-    return () => window.clearInterval(timer);
-  }, [refreshSession, session]);
+  }, [applySession, refreshSession]);
 
   useEffect(() => {
     const nextPhase = getCodePhase(secondsRemaining);
@@ -129,9 +124,6 @@ export default function DisplayPage() {
       if (previous > CRITICAL_AT_SECONDS && secondsRemaining === CRITICAL_AT_SECONDS) {
         setFlashClass("flash-critical");
       }
-      if (previous <= 1 && secondsRemaining === 30) {
-        setFlashClass("");
-      }
     }
 
     previousSeconds.current = secondsRemaining;
@@ -140,7 +132,7 @@ export default function DisplayPage() {
   useEffect(() => {
     if (!flashClass) return;
     const timeout = window.setTimeout(() => setFlashClass(""), 1100);
-    return () => window.clearInterval(timeout);
+    return () => window.clearTimeout(timeout);
   }, [flashClass]);
 
   if (!apiReady) {

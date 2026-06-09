@@ -1,57 +1,58 @@
 import { randomUUID } from "crypto";
-import { CODE_INTERVAL_MS, generateRandomCode, getTimeBucket, } from "./code.js";
+import { CODE_INTERVAL_MS, generateRandomCode, getCodeExpiryFromNow, } from "./code.js";
 import { getPool } from "./db.js";
 import { rowToSession } from "./types.js";
-function getCodeExpiry(now = Date.now()) {
-    const bucket = getTimeBucket(now);
-    return new Date((bucket + 1) * CODE_INTERVAL_MS);
-}
-async function generateUniqueCode(bucket, now = Date.now()) {
+async function generateUniqueCode(now = Date.now()) {
     const pool = getPool();
     for (let attempt = 0; attempt < 30; attempt++) {
         const code = generateRandomCode();
         const existing = await pool.query(`select 1 from display_sessions
        where code = $1
-         and code_bucket = $2
-         and code_expires_at > $3
-       limit 1`, [code, bucket, new Date(now)]);
+         and code_expires_at > $2
+       limit 1`, [code, new Date(now)]);
         if (existing.rowCount === 0) {
             return code;
         }
     }
     throw new Error("Could not generate a unique pairing code.");
 }
-async function upsertRoom(sessionId, now = Date.now()) {
+async function insertSession(now = Date.now()) {
     const pool = getPool();
-    const bucket = getTimeBucket(now);
-    const code = await generateUniqueCode(bucket, now);
-    const codeExpiresAt = getCodeExpiry(now);
+    const sessionId = randomUUID();
+    const code = await generateUniqueCode(now);
+    const codeExpiresAt = getCodeExpiryFromNow(now);
     const result = await pool.query(`insert into display_sessions (
       session_id, code, code_bucket, code_expires_at, updated_at
     ) values ($1, $2, $3, $4, $5)
-    on conflict (session_id) do update set
-      code = excluded.code,
-      code_bucket = excluded.code_bucket,
-      code_expires_at = excluded.code_expires_at,
-      updated_at = excluded.updated_at
-    returning *`, [sessionId, code, bucket, codeExpiresAt, new Date(now)]);
+    returning *`, [sessionId, code, 0, codeExpiresAt, new Date(now)]);
     return rowToSession(result.rows[0], now);
 }
-export async function createSession(sessionId) {
-    const id = sessionId ?? randomUUID();
-    return upsertRoom(id);
+async function rotateSessionCode(sessionId, currentBucket, now = Date.now()) {
+    const pool = getPool();
+    const code = await generateUniqueCode(now);
+    const codeExpiresAt = getCodeExpiryFromNow(now);
+    const result = await pool.query(`update display_sessions
+     set code = $2,
+         code_bucket = $3,
+         code_expires_at = $4,
+         updated_at = $5
+     where session_id = $1
+     returning *`, [sessionId, code, currentBucket + 1, codeExpiresAt, new Date(now)]);
+    return rowToSession(result.rows[0], now);
+}
+export async function createSession() {
+    return insertSession();
 }
 export async function refreshSession(sessionId) {
     const pool = getPool();
     const now = Date.now();
-    const bucket = getTimeBucket(now);
     const existing = await pool.query("select * from display_sessions where session_id = $1", [sessionId]);
     if (existing.rowCount === 0) {
-        return upsertRoom(sessionId, now);
+        return null;
     }
     const row = existing.rows[0];
-    if (Number(row.code_bucket) !== bucket) {
-        return upsertRoom(sessionId, now);
+    if (row.code_expires_at.getTime() <= now) {
+        return rotateSessionCode(sessionId, Number(row.code_bucket), now);
     }
     const result = await pool.query(`update display_sessions
      set updated_at = $2
@@ -63,7 +64,6 @@ export async function getSessionByCode(code) {
     const pool = getPool();
     const normalized = code.trim();
     const now = Date.now();
-    const bucket = getTimeBucket(now);
     const result = await pool.query(`select * from display_sessions
      where code = $1
        and code_expires_at > $2
@@ -71,11 +71,7 @@ export async function getSessionByCode(code) {
      limit 1`, [normalized, new Date(now)]);
     if (result.rowCount === 0)
         return null;
-    const row = result.rows[0];
-    if (row.code !== normalized || Number(row.code_bucket) !== bucket) {
-        return null;
-    }
-    return rowToSession(row, now);
+    return rowToSession(result.rows[0], now);
 }
 export async function setSessionMedia(code, media) {
     const session = await getSessionByCode(code);

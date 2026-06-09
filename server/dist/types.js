@@ -1,4 +1,4 @@
-import { getSecondsRemaining } from "./code.js";
+import { getSecondsRemainingFromExpiry } from "./code.js";
 export function rowToSession(row, now = Date.now()) {
     const media = row.media_type && row.media_url
         ? {
@@ -14,7 +14,7 @@ export function rowToSession(row, now = Date.now()) {
         id: row.session_id,
         code: row.code,
         bucket: Number(row.code_bucket),
-        secondsRemaining: getSecondsRemaining(now),
+        secondsRemaining: getSecondsRemainingFromExpiry(row.code_expires_at, now),
         media,
         createdAt: row.created_at.getTime(),
         lastSeenAt: row.updated_at.getTime(),

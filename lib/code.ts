@@ -2,15 +2,6 @@ export const CODE_INTERVAL_MS = 30_000;
 export const WARNING_AT_SECONDS = 20;
 export const CRITICAL_AT_SECONDS = 10;
 
-export function getTimeBucket(now = Date.now()): number {
-  return Math.floor(now / CODE_INTERVAL_MS);
-}
-
-export function getSecondsRemaining(now = Date.now()): number {
-  const elapsed = now % CODE_INTERVAL_MS;
-  return Math.ceil((CODE_INTERVAL_MS - elapsed) / 1000);
-}
-
 export function parseYouTubeId(url: string): string | null {
   try {
     const parsed = new URL(url);

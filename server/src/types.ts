@@ -1,4 +1,4 @@
-import { getSecondsRemaining } from "./code.js";
+import { getSecondsRemainingFromExpiry } from "./code.js";
 
 export type MediaType = "image" | "video" | "video-url" | "youtube";
 
@@ -49,7 +49,7 @@ export function rowToSession(row: RoomRow, now = Date.now()): SessionState {
     id: row.session_id,
     code: row.code,
     bucket: Number(row.code_bucket),
-    secondsRemaining: getSecondsRemaining(now),
+    secondsRemaining: getSecondsRemainingFromExpiry(row.code_expires_at, now),
     media,
     createdAt: row.created_at.getTime(),
     lastSeenAt: row.updated_at.getTime(),

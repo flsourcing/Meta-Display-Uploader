@@ -75,12 +75,10 @@ async function start(): Promise<void> {
     res.json({ ok: true });
   });
 
-  app.post("/api/session", async (req, res) => {
+  app.post("/api/session", async (_req, res) => {
     try {
       await pruneStaleSessions();
-      const sessionId =
-        typeof req.body?.sessionId === "string" ? req.body.sessionId : undefined;
-      const session = await createSession(sessionId);
+      const session = await createSession();
       res.json(session);
     } catch (error) {
       res.status(500).json({

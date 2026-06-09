@@ -3,23 +3,11 @@ import { getYouTubeEmbedUrl } from "./code";
 import { apiFetch } from "./api";
 import type { MediaItem, SessionState } from "./types";
 
-const SESSION_STORAGE_KEY = "meta-display-session-id";
-
-function getOrCreateSessionId(): string {
-  const existing = localStorage.getItem(SESSION_STORAGE_KEY);
-  if (existing) return existing;
-
-  const sessionId = crypto.randomUUID();
-  localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
-  return sessionId;
-}
-
 export async function ensureDisplaySession(): Promise<SessionState> {
-  const sessionId = getOrCreateSessionId();
   return apiFetch<SessionState>("/api/session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId }),
+    body: JSON.stringify({}),
   });
 }
 

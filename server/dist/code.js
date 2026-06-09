@@ -1,11 +1,10 @@
 import { randomInt } from "crypto";
 export const CODE_INTERVAL_MS = 30_000;
-export function getTimeBucket(now = Date.now()) {
-    return Math.floor(now / CODE_INTERVAL_MS);
+export function getSecondsRemainingFromExpiry(expiresAt, now = Date.now()) {
+    return Math.max(0, Math.ceil((expiresAt.getTime() - now) / 1000));
 }
-export function getSecondsRemaining(now = Date.now()) {
-    const elapsed = now % CODE_INTERVAL_MS;
-    return Math.ceil((CODE_INTERVAL_MS - elapsed) / 1000);
+export function getCodeExpiryFromNow(now = Date.now()) {
+    return new Date(now + CODE_INTERVAL_MS);
 }
 export function generateRandomCode() {
     return String(randomInt(0, 1_000_000)).padStart(6, "0");
